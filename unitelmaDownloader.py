@@ -305,23 +305,6 @@ def getKs(session, videoLink, mainId, courseId):
 	#proxies = {"http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080"}
 	if(VERBOSE):
 		print("Obtaining kaf endpoint...", end=" ")
-	'''curl 'https://elearning.unitelma.it/mod/kalvidres/lti_launch.php?courseid=1888&height=602&width=658&withblocks=0&source=http%3A%2F%2Fkaltura-kaf-uri.com%2Fbrowseandembed%2Findex%2Fmedia%2Fentryid%2F0_hbyn9aso%2FshowDescription%2Ffalse%2FshowTitle%2Ftrue%2FshowTags%2Ffalse%2FshowDuration%2Ffalse%2FshowOwner%2Ftrue%2FshowUploadDate%2Ffalse%2FembedType%2FoldEmbed%2FplayerSize%2F602x658%2FplayerSkin%2F23448850%2FcrsId%2F1888%2FcmId%2F50969%2F' \
-  -H 'Connection: keep-alive' \
-  -H 'Pragma: no-cache' \
-  -H 'Cache-Control: no-cache' \
-  -H 'sec-ch-ua: " Not A;Brand";v="99", "Chromium";v="96", "Google Chrome";v="96"' \
-  -H 'sec-ch-ua-mobile: ?0' \
-  -H 'sec-ch-ua-platform: "Windows"' \
-  -H 'Upgrade-Insecure-Requests: 1' \
-  -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36' \
-  -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9' \
-  -H 'Sec-Fetch-Site: same-origin' \
-  -H 'Sec-Fetch-Mode: navigate' \
-  -H 'Sec-Fetch-Dest: iframe' \
-  -H 'Referer: https://elearning.unitelma.it/mod/kalvidres/view.php?id=50969' \
-  -H 'Accept-Language: en-US,en;q=0.9,it-IT;q=0.8,it;q=0.7' \
-  -H 'Cookie: _shibstate_1638816139_e539=https%3A%2F%2Felearning.unitelma.it%2Fauth%2Fshibboleth%2Findex.php%3F; _shibsession_6c6561726e2d756e6974656c6d612d70726f6468747470733a2f2f73702d656c6561726e696e672d756e6974656c6d612d70726f642e63696e6563612e69742f73686962626f6c657468=_d528ef80609f967d643794a770004d1f; MoodleSessiontelmaprod=f73c41c107452d55c566374ed47e6fba' \
-  --compressed'''
 	headers = {
 		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
 		"Referer": videoLink
@@ -329,7 +312,6 @@ def getKs(session, videoLink, mainId, courseId):
 	link = f'https://elearning.unitelma.it/mod/kalvidres/lti_launch.php?courseid={courseId}&height=602&width=658&withblocks=0&source=http%3A%2F%2Fkaltura-kaf-uri.com%2Fbrowseandembed%2Findex%2Fmedia%2Fentryid%2F{mainId}%2FshowDescription%2Ffalse%2FshowTitle%2Ftrue%2FshowTags%2Ffalse%2FshowDuration%2Ffalse%2FshowOwner%2Ftrue%2FshowUploadDate%2Ffalse%2FembedType%2FoldEmbed%2FplayerSize%2F602x658%2FplayerSkin%2F23448850%2FcrsId%2F1888%2FcmId%2F50969%2F'
 	r = session.get(link, headers=headers)
 	t = r.text
-	#endpoint = "https://" + t.split('<form action="https://')[1].split("/")[0] + "/"
 	kafRefer = t.split('<form action="')[1].split('"')[0]
 	if(VERBOSE):
 		print(kafRefer)
@@ -345,51 +327,24 @@ def getKs(session, videoLink, mainId, courseId):
 		value = line.split('value="')[1].split('"')[0].replace("&amp;", "&")
 		params[name] = value
 
-	#print(params)
 	headers = {
 		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
 		"Referer": "https://elearning.unitelma.it/"
 	}
 	r = session.post(kafRefer, headers=headers, data=params)
 	t = r.text
-	#print(t)
-	#print(kafRefer)
-	#print(t)
 	lnk = t.split("window.location.href = '")[1].split("'")[0]
 	if(VERBOSE):
 		print("Done!")
 
 	if(VERBOSE):
 		print("Obtaining ks token...", end=" ")
-	'''curl 'https://kaf-113prod.elearning.unitelma.it/browseandembed/index/media-redirect/entryid/0_hbyn9aso/showDescription/false/showTitle/true/showTags/false/showDuration/false/showOwner/true/showUploadDate/false/embedType/oldEmbed/playerSize/602x658/playerSkin/23448850/crsId/1888/cmId/50969/thumbEmbed//autoPlay//startTime//endTime/' \
-  -H 'authority: kaf-113prod.elearning.unitelma.it' \
-  -H 'pragma: no-cache' \
-  -H 'cache-control: no-cache' \
-  -H 'sec-ch-ua: " Not A;Brand";v="99", "Chromium";v="96", "Google Chrome";v="96"' \
-  -H 'sec-ch-ua-mobile: ?0' \
-  -H 'sec-ch-ua-platform: "Windows"' \
-  -H 'upgrade-insecure-requests: 1' \
-  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36' \
-  -H 'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9' \
-  -H 'sec-fetch-site: same-origin' \
-  -H 'sec-fetch-mode: navigate' \
-  -H 'sec-fetch-dest: iframe' \
-  -H 'referer: https://kaf-113prod.elearning.unitelma.it/browseandembed/index/media/entryid/0_hbyn9aso/showDescription/false/showTitle/true/showTags/false/showDuration/false/showOwner/true/showUploadDate/false/embedType/oldEmbed/playerSize/602x658/playerSkin/23448850/crsId/1888/cmId/50969' \
-  -H 'accept-language: en-US,en;q=0.9,it-IT;q=0.8,it;q=0.7' \
-  -H 'cookie: kms-locale=custom_it; kms_ctamuls=pdc7j7shjp32piovlkg1nkum14' \
-  --compressed'''
 	headers = {
 		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
 		"Referer": kafRefer
 	}
-	#lnk = kafEndpoint + f'/browseandembed/index/media-redirect/entryid/{mainId}/showDescription/false/showTitle/true/showTags/false/showDuration/false/showOwner/true/showUploadDate/false/embedType/oldEmbed/playerSize/602x658/playerSkin/23448850/crsId/{courseId}/cmId/50969/thumbEmbed//autoPlay//startTime//endTime/'
-	#lnk = kafRefer.replace("/media/", "/media-redirect/") + "/thumbEmbed//autoPlay//startTime//endTime/"
-	#print()
-	#print(lnk)
-	#print(kafRefer)
 	r = session.get(lnk, headers=headers)
 	t = r.text
-	#print(t)
 	ks = t.split('{"ks":"')[1].split('"')[0]
 	if(VERBOSE):
 		print(ks)
