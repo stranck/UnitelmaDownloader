@@ -5,6 +5,7 @@ import requests
 import datetime
 import argparse
 import logging
+import random
 import math
 import re
 import os
@@ -26,24 +27,25 @@ def verbose():
 HELP = '''
 >>>> HELP MENU <<<<
 
-Utilizzo: unitelmaDownloader.py [-h] -u USERNAME -p PASSWORD [-f FILE] [-v] [-l LINK] [-a] [-o] [-F FILTER FILTER] [-g] [-n FILENAME]
+Utilizzo: unitelmaDownloader.py -u USERNAME -p PASSWORD [-f FILE] [-v] [-c COMMAND] [-h] [-U USERAGENT] [-l LINK] [-a] [-o] [-F FILTER FILTER] [-i] [-n FILENAME] [-r]
 
 Argomenti:
-    -h,           --help               : Mostra questa schermata di aiuto ed esce
-  * -u USERNAME,  --username USERNAME  : Username per loggarti dentro unitelma
-  * -p PASSWORD,  --password PASSWORD  : Password per loggarti dentro unitelma
-    -f FILE,      --file     FILE      : File da cui leggere, linea per linea, l'elenco di video da scaricare
-    -c COMMAND    --command  COMMAND   : Comando da eseguire a fine download
-    -v,           --verbose            : Imposta la modalità verbosa. Due livelli possibili
+    -h,           --help                 : Mostra questa schermata di aiuto ed esce
+  * -u USERNAME,  --username USERNAME    : Username per loggarti dentro unitelma
+  * -p PASSWORD,  --password PASSWORD    : Password per loggarti dentro unitelma
+    -f FILE,      --file     FILE        : File da cui leggere, linea per linea, l'elenco di video da scaricare
+	-U USER_AGENT --userAgent USER_AGENT : UserAgent da usare nelle richieste. Default: casuale
+    -c COMMAND    --command  COMMAND     : Comando da eseguire a fine download
+    -v,           --verbose              : Imposta la modalità verbosa. Due livelli possibili
 Per ogni linea di --file oppure direttamente da linea di comando (Se si vuole scaricare un solo video) è possibile specificare questi argomenti:
 (NOTA: Devi selezionare almeno un video da scaricare, tra gli argomenti e --file!)
-  * -l LINK,      --link     LINK          : Link del video da scaricare
-    -i,           --getInfo            : Ottiene le informazioni sulle stream del video al posto di scaricarlo
-    -n FILENAME,  --fileName FILENAME  : Nome del file in output
-    -r,	          --redownload         : Riscarica un file, anche se già esiste
-    -a,           --modeAnd            : I filtri per la scelta della stream da scaricare sono in AND (default)
-    -o,           --modeOr             : I filtri per la scelta della stream da scaricare sono in OR
-    -F KEY REGEX, --filter   KEY REGEX : Specifica un filtro sul campo KEY delle stream, che deve matchare la REGEX
+  * -l LINK,      --link     LINK        : Link del video da scaricare
+    -i,           --getInfo              : Ottiene le informazioni sulle stream del video al posto di scaricarlo
+    -n FILENAME,  --fileName FILENAME    : Nome del file in output
+    -r,	          --redownload           : Riscarica un file, anche se già esiste
+    -a,           --modeAnd              : I filtri per la scelta della stream da scaricare sono in AND (default)
+    -o,           --modeOr               : I filtri per la scelta della stream da scaricare sono in OR
+    -F KEY REGEX, --filter   KEY REGEX   : Specifica un filtro sul campo KEY delle stream, che deve matchare la REGEX
 * argomenti obbligatori
 
 Campi KEY possibili delle stream:
@@ -70,6 +72,21 @@ Campi KEY possibili delle stream:
 UnitelmaDownloader creato da https://stranck.ovh
 '''
 
+USER_AGENTS = [ #List obtained from https://techblog.willshouse.com/2012/01/03/most-common-user-agents/
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0",
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36",
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36",
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36",
+	"Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0",
+	"Mozilla/5.0 (X11; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0",
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.1 Safari/605.1.15",
+	"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0",
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:94.0) Gecko/20100101 Firefox/94.0",
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36"
+]
+
+USER_AGENT = random.choice(USER_AGENTS)
 VERBOSE = False
 session = requests.Session()
 
@@ -149,6 +166,7 @@ def analyzeParam(args):
 
 def analyzeArgs():
 	global VERBOSE
+	global USER_AGENT
 	usr = None
 	pw = None
 	cmd = None
@@ -162,6 +180,7 @@ def analyzeArgs():
 	parser.add_argument('-v', '--verbose', action='count', default=0)
 	parser.add_argument('-c', '--command', nargs=1, default=None)
 	parser.add_argument('-h', '--help', action='store_true')
+	parser.add_argument('-U', '--userAgent', nargs=1, default=None)
 
 	parser.add_argument('-l', '--link', nargs=1)
 	parser.add_argument('-a', '--modeAnd', action='store_true')
@@ -202,6 +221,8 @@ def analyzeArgs():
 		VERBOSE = True
 	if(verboseLevel > 1):
 		verbose()
+	if(args.userAgent is not None):
+		USER_AGENT = args.userAgent
 
 	param = analyzeParam(args)
 	if(param != None):
@@ -219,20 +240,20 @@ def login(session, usr, pw):
 			print("Logging in...", end="")
 
 		heahder = {
-			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
+			"User-Agent": USER_AGENT,
 		}
 		r = session.get("https://elearning.unitelma.it/", headers=heahder)
 		if(VERBOSE):
 			print(".", end="")
 		heahder = {
-			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
+			"User-Agent": USER_AGENT,
 			"Referer": "https://elearning.unitelma.it/unitelma_login.php"
 		}
 		r = session.get("https://elearning.unitelma.it/auth/shibboleth/index.php?", headers=heahder)
 		if(VERBOSE):
 			print(".", end="")
 		heahder = {
-			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
+			"User-Agent": USER_AGENT,
 			"Referer": "https://idp.unitelma.it/idp/profile/SAML2/Redirect/SSO?execution=e1s1",
 			"Origin": "https://idp.unitelma.it"
 		}
@@ -250,11 +271,7 @@ def login(session, usr, pw):
 		if(VERBOSE):
 			print(".", end="")
 		heahder = {
-			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
-			"Referer": "https://idp.unitelma.it/idp/profile/SAML2/Redirect/SSO?execution=e1s1"
-		}
-		heahder = {
-			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
+			"User-Agent": USER_AGENT,
 			"Origin": "https://idp.unitelma.it",
 			"Referer": "https://idp.unitelma.it/idp/profile/SAML2/Redirect/SSO?execution=e1s2"
 		}
@@ -270,7 +287,7 @@ def login(session, usr, pw):
 		relayState = "cookie:" + t.split('"RelayState" value="cookie&#x3a;')[1].split('"/>')[0]
 		resp = t.split('"SAMLResponse" value="')[1].split('"/>')[0]
 		heahder = {
-			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
+			"User-Agent": USER_AGENT,
 			"Origin": "https://idp.unitelma.it",
 			"Referer": "https://idp.unitelma.it/"
 		}
@@ -297,7 +314,7 @@ def getMainID(session, videoLink):
 	if(VERBOSE):
 		print("Getting main ID...", end=" ")
 	headers = {
-		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
+		"User-Agent": USER_AGENT,
 		"Referer": videoLink
 	}
 	r = session.get(videoLink, headers=headers)
@@ -312,7 +329,7 @@ def getKs(session, videoLink, mainId, courseId):
 	if(VERBOSE):
 		print("Obtaining kaf endpoint...", end=" ")
 	headers = {
-		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
+		"User-Agent": USER_AGENT,
 		"Referer": videoLink
 	}
 	#TODO find a clean version of this link
@@ -336,7 +353,7 @@ def getKs(session, videoLink, mainId, courseId):
 		params[name] = value
 
 	headers = {
-		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
+		"User-Agent": USER_AGENT,
 		"Referer": "https://elearning.unitelma.it/"
 	}
 	r = session.post(kafRefer, headers=headers, data=params)
@@ -348,7 +365,7 @@ def getKs(session, videoLink, mainId, courseId):
 	if(VERBOSE):
 		print("Obtaining ks token...", end=" ")
 	headers = {
-		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
+		"User-Agent": USER_AGENT,
 		"Referer": kafRefer
 	}
 	r = session.get(lnk, headers=headers)
@@ -358,13 +375,13 @@ def getKs(session, videoLink, mainId, courseId):
 		print(ks)
 	return ks, endpoint
 
-def getStreams(session, mainId, ksToken, endpoint):
+def getStreams(session, mainId, ksToken, kafEndpoint):
 	if(VERBOSE):
 		print("Asking for streams metadata...", end=" ")
 	headers = {
-		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
-		"Referer": endpoint + "/",
-		"origin": endpoint,
+		"User-Agent": USER_AGENT,
+		"Referer": kafEndpoint + "/",
+		"origin": kafEndpoint,
 		"authority": "kmc.l2l.cineca.it"
 	}
 	params = {
@@ -464,8 +481,8 @@ def downloadVideo(param):
 	videoLink = param["link"]
 	print("\nDownloading: " + videoLink)
 	mainId, courseId = getMainID(session, videoLink)
-	ksToken, endpoint = getKs(session, videoLink, mainId, courseId)
-	streams = getStreams(session, mainId, ksToken, endpoint)
+	ksToken, kafEndpoint = getKs(session, videoLink, mainId, courseId)
+	streams = getStreams(session, mainId, ksToken, kafEndpoint)
 	selectedStream = selectStream(streams, param)
 	if(param["getInfo"] or selectedStream == None):
 		s  = "\n"
@@ -487,14 +504,19 @@ def downloadVideo(param):
 			originalLinkId = parse_qs(parsed_url.query)['id'][0]
 			fileName = selectedStream["name"] + "_" + str(courseId) + "_" + originalLinkId + ".mp4"
 			fileName = re.sub(r'[^a-zA-Z0-9_\-\s\.]', '', fileName)
-		if(os.path.exists(fileName)):
+		if(not param["redownload"] and os.path.exists(fileName)):
 			print(f"Skipping '{fileName}'; already download")
 		else:
-			download(downloadLink, fileName)
+			download(downloadLink, fileName, kafEndpoint)
 			print(fileName + "\t downloaded!")
 
-def download(url, fileName):
-	response = requests.get(url, stream=True)
+def download(url, fileName, kafEndpoint):
+	headers = {
+		"authority": "streaming.l2l.cineca.it",
+		"Referer": kafEndpoint,
+		"User-Agent": USER_AGENT
+	}
+	response = requests.get(url, stream=True, headers=headers)
 	total_size_in_bytes= int(response.headers.get('content-length', 0))
 	block_size = 1024 #1 Kibibyte
 	progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)

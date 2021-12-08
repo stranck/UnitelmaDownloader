@@ -2,6 +2,8 @@
 
 Scarica video (anche in batch) da [Unitelma](https://www.unitelmasapienza.it/) in maniera automatica, utilizzando solamente il link!
 
+Creato da [stranck.ovh](https://stranck.ovh/)
+
 ## Istallazione 4scriptKiddies
 
 Per funzionare UnitelmaDownloader, ha bisogno di [python3](https://www.python.org/downloads/) installato nella propria macchina (Testato con Python 3.8.10)
@@ -71,14 +73,15 @@ Se si vuole riscaricare un file che già esiste, usare l'argomento `-r`/`--redow
 
 Ecco la lista di argomenti accettati dal programma
 
-| Short         | Nome argomento        | Obbligatorio       | Descrizione                                                          |
-| ------------- | --------------------- | ------------------ | -------------------------------------------------------------------- |
-| `-h`          | `--help`              | :x:                | Mostra la schermata di help                                          |
-| `-u` USERNAME | `--username` USERNAME | :heavy_check_mark: | Username per loggarti dentro unitelma                                |
-| `-p` PASSWORD | `--password` PASSWORD | :heavy_check_mark: | Password per loggarti dentro unitelma                                |
-| `-f` FILE     | `--file`     FILE     | :x:                | File da cui leggere, linea per linea, l'elenco di video da scaricare |
-| `-c` COMMAND  | `--command`  COMMAND  | :x:                | Comando da eseguire a fine download                                  |
-| `-v`          | `--verbose`           | :x:                | Imposta la modalità verbosa. Due livelli possibili                   |
+| Short           | Nome argomento           | Obbligatorio       | Descrizione                                                          |
+| --------------- | ------------------------ | ------------------ | -------------------------------------------------------------------- |
+| `-h`            | `--help`                 | :x:                | Mostra la schermata di help                                          |
+| `-u` USERNAME   | `--username` USERNAME    | :heavy_check_mark: | Username per loggarti dentro unitelma                                |
+| `-p` PASSWORD   | `--password` PASSWORD    | :heavy_check_mark: | Password per loggarti dentro unitelma                                |
+| `-f` FILE       | `--file`     FILE        | :x:                | File da cui leggere, linea per linea, l'elenco di video da scaricare |
+| `-U` USER_AGENT | `--userAgent` USER_AGENT | :x:                | UserAgent da usare nelle richieste. Default: casuale                 |
+| `-c` COMMAND    | `--command`  COMMAND     | :x:                | Comando da eseguire a fine download                                  |
+| `-v`            | `--verbose`              | :x:                | Imposta la modalità verbosa. Due livelli possibili                   |
 
 Per ogni linea di --file oppure direttamente da linea di comando (Se si vuole scaricare un solo video) è possibile specificare questi argomenti:
 
