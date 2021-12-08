@@ -42,7 +42,7 @@ Argomenti:
 Per ogni linea di --file oppure direttamente da linea di comando (Se si vuole scaricare un solo video) è possibile specificare questi argomenti:
 (NOTA: Devi selezionare almeno un video da scaricare, tra gli argomenti e --file!)
   * -l LINK,      --link     LINK          : Link del video da scaricare
-    -g,           --getInfo            : Ottiene le informazioni sulle stream del video al posto di scaricarlo
+    -i,           --getInfo            : Ottiene le informazioni sulle stream del video al posto di scaricarlo
     -n FILENAME,  --fileName FILENAME  : Nome del file in output
     -a,           --modeAnd            : I filtri per la scelta della stream da scaricare sono in AND (default)
     -o,           --modeOr             : I filtri per la scelta della stream da scaricare sono in OR
@@ -103,13 +103,15 @@ def printStream(stream, videoLink):
 	searchTxtStr	= stream["searchText"] 	if (len(stream["searchText"]) < 141)	else stream["searchText"][:137] 	+ "..."
 	tagsStr			= tagsStr			 	if (len(tagsStr) < 150)					else tagsStr[:146] 					+ "..."
 
-	s  = "+--- Stream ID: " + (str(stream["internalId"]) + " ").ljust(4, "-") + "--- Video link: " + (videoLink + " ").ljust(123, "-") + "+\n"
+	s  = "+--- Internal stream ID: " + (str(stream["internalId"]) + " ").ljust(4, "-") + "--- Video link: " + (videoLink + " ").ljust(114, "-") + "+\n"
 	s += "|  " + (durationStr.ljust(30) + dimensionStr.ljust(30) + qualityStr.ljust(30) + bitrateStr.ljust(30)).ljust(156) + 	"|\n"
 	s += "|  " + ("Name: \"" 			+ nameStr + "\"")			.ljust(156) +												"|\n"
 	s += "|  " + ("Description: \"" 	+ descriptionStr + "\"")	.ljust(156) +												"|\n"
 	s += "|  " + ("Search text: \"" 	+ searchTxtStr + "\"")		.ljust(156) +												"|\n"
 	s += "|  " + ("Tags: " 				+ tagsStr)					.ljust(156) +												"|\n"
 	s += "+" + "".ljust(158, "-") 																							  + "+"
+	if(VERBOSE):
+		s += "\n" + str(stream)
 	print(s)
 
 def selectStream(streams, params):
@@ -187,7 +189,7 @@ def analyzeArgs():
 	params = []
 	verboseLevel = 0
 
-	parser = argparse.ArgumentParser("UnitelmaDownloader - Scarica lezioni da Unitelma - Creato da https://stranck.ovh", add_help=False)
+	parser = argparse.ArgumentParser("UnitelmaDownloader - Scarica lezioni da Unitelma - Creato da https://stranck.ovh ", add_help=False)
 	parser.add_argument('-u', '--username', nargs=1, required=True)
 	parser.add_argument('-p', '--password', nargs=1, required=True)
 	parser.add_argument('-f', '--file', nargs=1, default=None)
@@ -199,7 +201,7 @@ def analyzeArgs():
 	parser.add_argument('-a', '--modeAnd', action='store_true')
 	parser.add_argument('-o', '--modeOr', action='store_true')
 	parser.add_argument('-F', '--filter', nargs=2, action='append')
-	parser.add_argument('-g', '--getInfo', action='store_true')
+	parser.add_argument('-i', '--getInfo', action='store_true')
 	parser.add_argument('-n', '--fileName', nargs=1)
 
 
@@ -642,7 +644,7 @@ def downloadVideo(param):
 	if(param["getInfo"] or selectedStream == None):
 		s  = "\n"
 		s += "".ljust(160, "-") + "\n"
-		s += "  INFO for video: " + videoLink + "\n"
+		s += "    INFO for video: " + videoLink + "\n"
 		s += "".ljust(160, "v") + "\n"
 		print(s)
 		for stream in streams:
