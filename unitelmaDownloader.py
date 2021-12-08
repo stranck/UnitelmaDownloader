@@ -174,8 +174,8 @@ def analyzeArgs():
 	verboseLevel = 0
 
 	parser = argparse.ArgumentParser("UnitelmaDownloader - Scarica lezioni da Unitelma - Creato da https://stranck.ovh ", add_help=False)
-	parser.add_argument('-u', '--username', nargs=1, required=True)
-	parser.add_argument('-p', '--password', nargs=1, required=True)
+	parser.add_argument('-u', '--username', nargs=1)
+	parser.add_argument('-p', '--password', nargs=1)
 	parser.add_argument('-f', '--file', nargs=1, default=None)
 	parser.add_argument('-v', '--verbose', action='count', default=0)
 	parser.add_argument('-c', '--command', nargs=1, default=None)
@@ -208,7 +208,9 @@ def analyzeArgs():
 				newArgs = []
 				j = 0
 				while(j < len(sp)): #Shitty workaround bc I don't know how regex works in python. Hopefully this works always
-					newArgs.add(sp[j])
+					if((sp[j].startswith("'") or sp[j].startswith('"')) and sp[j][0] == sp[j][-1] and (len(sp[j]) > 2 and sp[j][-2] != '\\')):
+						sp[j] = sp[j][1:-1] #Remove start and end quotes if present, the param is specified between quotes
+					newArgs.append(sp[j])
 					j += 2
 				param = analyzeParam(parser.parse_args(newArgs))
 				if(param == None):
@@ -425,13 +427,13 @@ def getStreams(session, mainId, ksToken, kafEndpoint):
 			obj = {
 				"internalId": internalId,
 				"qualityId" : qualityId,
-				"width": highRes["width"],
-				"height": highRes["height"],
-				"bitrate": highRes["bitrate"],
-				"framerate": highRes["frameRate"],
-				"entryId": highRes["entryId"],
-				"flavorId": highRes["id"],
-				"size": highRes["size"],
+				"width": highRes["width"] if "width" in highRes else 0,
+				"height": highRes["height"] if "height" in highRes else 0,
+				"bitrate": highRes["bitrate"] if "bitrate" in highRes else 0,
+				"framerate": highRes["frameRate"] if "frameRate" in highRes else 0,
+				"entryId": highRes["entryId"] if "entryId" in highRes else "-",
+				"flavorId": highRes["id"] if "id" in highRes else "-",
+				"size": highRes["size"] if "size" in highRes else 0,
 
 				"duration": 0,
 				"description": "-",
@@ -450,10 +452,10 @@ def getStreams(session, mainId, ksToken, kafEndpoint):
 			
 			if(metaDataIdx < len(allMetaData)):
 				metaData = allMetaData[metaDataIdx]
-				obj["duration"] = metaData["duration"]
-				obj["name"] = metaData["name"]
-				obj["description"] = metaData["description"]
-				obj["searchText"] = metaData["searchText"]
+				obj["duration"] = metaData["duration"] if "duration" in metaData else 0
+				obj["name"] = metaData["name"] if "name" in metaData else "-"
+				obj["description"] = metaData["description"] if "description" in metaData else "-"
+				obj["searchText"] = metaData["searchText"] if "searchText" in metaData else "-"
 
 				obj["durationStr"] = str(datetime.timedelta(seconds=metaData["duration"]))
 
@@ -487,6 +489,8 @@ def downloadVideo(param):
 	if(param["getInfo"] or selectedStream == None):
 		s  = "\n"
 		s += "".ljust(160, "-") + "\n"
+		if(selectedStream == None):
+			s += "    Unable to select the correct stream    "
 		s += "    INFO for video: " + videoLink + "\n"
 		s += "".ljust(160, "v") + "\n"
 		print(s)
