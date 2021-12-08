@@ -4,7 +4,7 @@ Scarica video (anche in batch) da [Unitelma](https://www.unitelmasapienza.it/) i
 
 Creato da [stranck.ovh](https://stranck.ovh/)
 
-## Istallazione 4scriptKiddies
+## Installazione 4scriptKiddies
 
 Per funzionare UnitelmaDownloader, ha bisogno di [python3](https://www.python.org/downloads/) installato nella propria macchina (Testato con Python 3.8.10)
 
