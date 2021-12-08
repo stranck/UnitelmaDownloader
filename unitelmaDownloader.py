@@ -13,8 +13,7 @@ def verbose():
 	try:
 		import http.client as http_client
 	except ImportError:
-		# Python 2
-		import httplib as http_client
+		pass
 	http_client.HTTPConnection.debuglevel = 1
 
 	# You must initialize logging, otherwise you'll not see debug output.
@@ -41,6 +40,7 @@ Per ogni linea di --file oppure direttamente da linea di comando (Se si vuole sc
   * -l LINK,      --link     LINK          : Link del video da scaricare
     -i,           --getInfo            : Ottiene le informazioni sulle stream del video al posto di scaricarlo
     -n FILENAME,  --fileName FILENAME  : Nome del file in output
+    -r,	          --redownload         : Riscarica un file, anche se già esiste
     -a,           --modeAnd            : I filtri per la scelta della stream da scaricare sono in AND (default)
     -o,           --modeOr             : I filtri per la scelta della stream da scaricare sono in OR
     -F KEY REGEX, --filter   KEY REGEX : Specifica un filtro sul campo KEY delle stream, che deve matchare la REGEX
@@ -48,7 +48,7 @@ Per ogni linea di --file oppure direttamente da linea di comando (Se si vuole sc
 
 Campi KEY possibili delle stream:
     internalId      : Numero in ordine della stream
-	qualityId       : Id della qualità di un determinato video (0 = qualità più alta)
+    qualityId       : Id della qualità di un determinato video (0 = qualità più alta)
     width           : Larghezza del video
     height          : Altezza del video
     bitrate         : Bitrate del video
@@ -142,7 +142,8 @@ def analyzeParam(args):
 		"modeAnd": modeAnd,
 		"filters": filters,
 		"getInfo": getInfo,
-		"fileName": fileName
+		"fileName": fileName,
+		"redownload": args.redownload
 	}
 	return None if (link == None) else obj
 
@@ -168,6 +169,7 @@ def analyzeArgs():
 	parser.add_argument('-F', '--filter', nargs=2, action='append')
 	parser.add_argument('-i', '--getInfo', action='store_true')
 	parser.add_argument('-n', '--fileName', nargs=1)
+	parser.add_argument('-r', '--redownload', action='store_true')
 
 
 	args = parser.parse_args()
@@ -183,8 +185,13 @@ def analyzeArgs():
 			n = 0
 			for line in file:
 				line = line.strip()
-				sp = line.split()
-				param = analyzeParam(sp)
+				sp = re.compile(r"\s(?=([^\"]*\"[^\"]*\")*[^\"]*$)").split(line) #Don't ask me how I wrote this regex. I don't remember neither
+				newArgs = []
+				j = 0
+				while(j < len(sp)): #Shitty workaround bc I don't know how regex works in python. Hopefully this works always
+					newArgs.add(sp[j])
+					j += 2
+				param = analyzeParam(parser.parse_args(newArgs))
 				if(param == None):
 					print(f"*** AN ERROR OCCURRED LOADING PARAM AT LINE {n}")
 				else:
@@ -312,6 +319,7 @@ def getKs(session, videoLink, mainId, courseId):
 	link = f'https://elearning.unitelma.it/mod/kalvidres/lti_launch.php?courseid={courseId}&height=602&width=658&withblocks=0&source=http%3A%2F%2Fkaltura-kaf-uri.com%2Fbrowseandembed%2Findex%2Fmedia%2Fentryid%2F{mainId}%2FshowDescription%2Ffalse%2FshowTitle%2Ftrue%2FshowTags%2Ffalse%2FshowDuration%2Ffalse%2FshowOwner%2Ftrue%2FshowUploadDate%2Ffalse%2FembedType%2FoldEmbed%2FplayerSize%2F602x658%2FplayerSkin%2F23448850%2FcrsId%2F1888%2FcmId%2F50969%2F'
 	r = session.get(link, headers=headers)
 	t = r.text
+	endpoint = "https://" + t.split('<form action="https://')[1].split("/")[0]
 	kafRefer = t.split('<form action="')[1].split('"')[0]
 	if(VERBOSE):
 		print(kafRefer)
@@ -348,15 +356,15 @@ def getKs(session, videoLink, mainId, courseId):
 	ks = t.split('{"ks":"')[1].split('"')[0]
 	if(VERBOSE):
 		print(ks)
-	return ks
+	return ks, endpoint
 
-def getStreams(session, mainId, ksToken):
+def getStreams(session, mainId, ksToken, endpoint):
 	if(VERBOSE):
 		print("Asking for streams metadata...", end=" ")
 	headers = {
 		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
-		"Referer": "https://kaf-113prod.elearning.unitelma.it/",
-		"origin": "https://kaf-113prod.elearning.unitelma.it",
+		"Referer": endpoint + "/",
+		"origin": endpoint,
 		"authority": "kmc.l2l.cineca.it"
 	}
 	params = {
@@ -456,8 +464,8 @@ def downloadVideo(param):
 	videoLink = param["link"]
 	print("\nDownloading: " + videoLink)
 	mainId, courseId = getMainID(session, videoLink)
-	ksToken = getKs(session, videoLink, mainId, courseId)
-	streams = getStreams(session, mainId, ksToken)
+	ksToken, endpoint = getKs(session, videoLink, mainId, courseId)
+	streams = getStreams(session, mainId, ksToken, endpoint)
 	selectedStream = selectStream(streams, param)
 	if(param["getInfo"] or selectedStream == None):
 		s  = "\n"

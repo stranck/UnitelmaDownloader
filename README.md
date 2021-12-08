@@ -42,6 +42,8 @@ Una volta creato tale file, può essere specificato ad UnitelmaDownloader con l'
 
 Se si vuole eseguire un comando una volta terminato i download (Ad esempio, spegnere il computer), va fatto utilizzando l'argomento `-c`/`--command` e specificando il comando tra virgolette: `python3 unitelmaDownloader.py -u USERNAME -p PASSWORD -f ./allLinks.txt --command "shutdown -P now"`
 
+Se si vuole riscaricare un file che già esiste, usare l'argomento `-r`/`--redownload`
+
 ### Chiavi possibili dentro --filter
 
 | Chiave      | Descrizione                                                     |
@@ -83,11 +85,12 @@ Per ogni linea di --file oppure direttamente da linea di comando (Se si vuole sc
 | Short          | Nome argomento         | Obbligatorio       | Descrizione                                                                 |
 | -------------- | ---------------------- | ------------------ | --------------------------------------------------------------------------- |
 | `-l` LINK      | `--link`     LINK      | :heavy_check_mark: | Link del video da scaricare                                                 |
-| `-i`           | `--getInfo`            | :x:                |  Ottiene le informazioni sulle stream del video al posto di scaricarlo      |
+| `-i`           | `--getInfo`            | :x:                | Ottiene le informazioni sulle stream del video al posto di scaricarlo       |
 | `-n` FILENAME  | `--fileName` FILENAME  | :x:                | Nome del file in output                                                     |
+| `-r`           | `--redownload`         | :x:                | Riscarica un file, anche se già esiste                                      |
 | `-a`           | `--modeAnd`            | :x:                | I filtri per la scelta della stream da scaricare sono in AND **(default)**  |
 | `-o`           | `--modeOr`             | :x:                | I filtri per la scelta della stream da scaricare sono in OR                 |
-| `-F` KEY REGEX | `--filter`   KEY REGEX | :x:                |  Specifica un filtro sul campo KEY delle stream, che deve matchare la REGEX |
+| `-F` KEY REGEX | `--filter`   KEY REGEX | :x:                | Specifica un filtro sul campo KEY delle stream, che deve matchare la REGEX  |
 
 (**NOTA**: Devi selezionare almeno un video da scaricare, tra gli argomenti e --file!)
 
