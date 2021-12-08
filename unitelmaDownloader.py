@@ -415,12 +415,16 @@ def getStreams(session, mainId, ksToken, kafEndpoint):
 	r = session.post("https://kmc.l2l.cineca.it/api_v3/index.php?service=multirequest", headers=headers, data=params)
 	j = r.json()
 	allMetaData = j[0]["objects"]
-	j = j[1:]
+	streamsData = j[1:]
 	streams = []
 	metaDataIdx = 0
 	internalId = 0
-	for stream in j:
+	for stream in streamsData:
 		qualityId = 0
+		if("objects" not in stream):
+			print(f"ERROR: Unable to fetch stream objects mdID={metaDataIdx}. Fullresponse: {j}")
+			continue
+
 		for highRes in stream["objects"]:
 			tags = set()
 
@@ -479,40 +483,53 @@ def getDownloadLink(stream):
 	return f"https://streaming.l2l.cineca.it/p/113/sp/11300/serveFlavor/entryId/{stream['entryId']}/v/2/flavorId/{stream['flavorId']}/forceproxy/true/name/a.mp4"
 
 
+RESP_DOWNLOADED = 0
+RESP_ALREADY_DWN = 1
+RESP_UNABLE_TO_SELECT = 2
+RESP_ERROR = 3
 def downloadVideo(param):
-	videoLink = param["link"]
-	print("\nDownloading: " + videoLink)
-	mainId, courseId = getMainID(session, videoLink)
-	ksToken, kafEndpoint = getKs(session, videoLink, mainId, courseId)
-	streams = getStreams(session, mainId, ksToken, kafEndpoint)
-	selectedStream = selectStream(streams, param)
-	if(param["getInfo"] or selectedStream == None):
-		s  = "\n"
-		s += "".ljust(160, "-") + "\n"
-		if(selectedStream == None):
-			s += "    Unable to select the correct stream    "
-		s += "    INFO for video: " + videoLink + "\n"
-		s += "".ljust(160, "v") + "\n"
-		print(s)
-		for stream in streams:
-			print()
-			printStream(stream, videoLink)
-			print()
-	else:
-		downloadLink = getDownloadLink(selectedStream)
-		if(VERBOSE):
-			print("Downloading from: " + downloadLink)
-		fileName = param["fileName"]
-		if(fileName == None):
-			parsed_url = urlparse(videoLink)
-			originalLinkId = parse_qs(parsed_url.query)['id'][0]
-			fileName = selectedStream["name"] + "_" + str(courseId) + "_" + originalLinkId + ".mp4"
-			fileName = re.sub(r'[^a-zA-Z0-9_\-\s\.]', '', fileName)
-		if(not param["redownload"] and os.path.exists(fileName)):
-			print(f"Skipping '{fileName}'; already download")
+	videoLink = None
+	try: 
+		videoLink = param["link"]
+		print("\nDownloading: " + videoLink)
+		mainId, courseId = getMainID(session, videoLink)
+		ksToken, kafEndpoint = getKs(session, videoLink, mainId, courseId)
+		streams = getStreams(session, mainId, ksToken, kafEndpoint)
+		selectedStream = selectStream(streams, param)
+		if(param["getInfo"] or selectedStream == None):
+			s  = "\n"
+			s += "".ljust(160, "-") + "\n"
+			if(selectedStream == None):
+				s += "    Unable to select the correct stream    "
+			s += "    INFO for video: " + videoLink + "\n"
+			s += "".ljust(160, "v") + "\n"
+			print(s)
+			for stream in streams:
+				print()
+				printStream(stream, videoLink)
+				print()
+			return RESP_UNABLE_TO_SELECT			
 		else:
-			download(downloadLink, fileName, kafEndpoint)
-			print(fileName + "\t downloaded!")
+			downloadLink = getDownloadLink(selectedStream)
+			if(VERBOSE):
+				print("Downloading from: " + downloadLink)
+			fileName = param["fileName"]
+			if(fileName == None):
+				parsed_url = urlparse(videoLink)
+				originalLinkId = parse_qs(parsed_url.query)['id'][0]
+				fileName = selectedStream["name"] + "_" + str(courseId) + "_" + originalLinkId + ".mp4"
+				fileName = re.sub(r'[^a-zA-Z0-9_\-\s\.]', '', fileName)
+			if(not param["redownload"] and os.path.exists(fileName)):
+				print(f"Skipping '{fileName}'; already download")
+				return RESP_ALREADY_DWN
+			else:
+				download(downloadLink, fileName, kafEndpoint)
+				print(fileName + "\t downloaded!")
+				return RESP_DOWNLOADED
+	except Exception as e:
+		print("*** ERROR while downloading " + videoLink)
+		print(e)
+		return RESP_ERROR
 
 def download(url, fileName, kafEndpoint):
 	headers = {
@@ -535,8 +552,20 @@ def download(url, fileName, kafEndpoint):
 if __name__ == "__main__":
 	usr, pw, params, cmd = analyzeArgs()
 	login(session, usr, pw)
+	resp = [[], [], [], []]
+	i = 0
 	for param in params:
-		downloadVideo(param)
+		resp[downloadVideo(param)].append(i)
+		i += 1
+	print()
+	if(len(resp[0]) > 0):
+		print(f"Successfully downloaded: {resp[0]}")
+	if(len(resp[1]) > 0):
+		print(f"Already downloaded: {resp[1]}")
+	if(len(resp[2]) > 0):
+		print(f"Unable to select stream: {resp[2]}")
+	if(len(resp[3]) > 0):
+		print(f"Errors: {resp[3]}")
 	if cmd is not None:
 		if(VERBOSE):
 			print("Executing " + cmd)
