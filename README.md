@@ -79,7 +79,7 @@ Ecco la lista di argomenti accettati dal programma
 
 Per ogni linea di --file oppure direttamente da linea di comando (Se si vuole scaricare un solo video) è possibile specificare questi argomenti:
 
-| Short          | Nome argomento          | Obbligatorio      | Descrizione                                                                 |
+| Short          | Nome argomento         | Obbligatorio       | Descrizione                                                                 |
 | -------------- | ---------------------- | ------------------ | --------------------------------------------------------------------------- |
 | `-l` LINK      | `--link`     LINK      | :heavy_check_mark: | Link del video da scaricare                                                 |
 | `-i`           | `--getInfo`            | :x:                |  Ottiene le informazioni sulle stream del video al posto di scaricarlo      |
@@ -87,4 +87,11 @@ Per ogni linea di --file oppure direttamente da linea di comando (Se si vuole sc
 | `-a`           | `--modeAnd`            | :x:                | I filtri per la scelta della stream da scaricare sono in AND **(default)**  |
 | `-o`           | `--modeOr`             | :x:                | I filtri per la scelta della stream da scaricare sono in OR                 |
 | `-F` KEY REGEX | `--filter`   KEY REGEX | :x:                |  Specifica un filtro sul campo KEY delle stream, che deve matchare la REGEX |
+
 (**NOTA**: Devi selezionare almeno un video da scaricare, tra gli argomenti e --file!)
+
+## :warning: Nota importante
+
+Assicuratevi di avere tutti i permessi del caso per poter veramente scaricare le lezioni da Unitelma. Ricordatevi di NON ricaricarle da altre parti, altrimenti sarebbe minimo violazione di copyright. Non sono responsabile per ciò che farete utilizzando questo software.
+
+Also: Scusate gente esperta se scrivo un po' come un idiota, ma il readme deve essere a prova di scemo
