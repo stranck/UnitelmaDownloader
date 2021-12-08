@@ -24,7 +24,7 @@ Ogni lezione su unitelma è caratterizzato da più stream, ovvero video a qualit
 
 ![image](https://user-images.githubusercontent.com/16164827/145217845-2dd92bdc-ca8d-4a4b-bc41-041422859a5f.png)
 
-A questo punto utilizzando uno o più `-F`/`--filter` possiamo selezionare la stream che vogliamo scaricare. I filtri prendono due argomenti: il primo è la chiave su cui vogliamo filtrare (Continuare a leggere il readme per la lista delle chiavi), il secondo è una regex che verrà applicata sul valore di quella chiave. So che a molti la parola "regex" può far paura, ma se dovete semplicemente prendere una determinata stream potete banalmente scrivere il valore completo tra virgolette (Ad esempio: `"Luke4316"` ci matcherà la stringa esatta Luke4316). Un'altra regex che può essere utile è ottenere controllare se una stringa è contenuta nel valore della chiave è questa: `".*VALORE CONTENUTO NELLA STRINGA.*"`. Talvolta esiste una stream che combina già le varie riprese della stessa lezione in un unico file. Per ottenerla uso il seguente comando: `python3 unitelmaDownloader.py --username USERNAME --password PASSWORD --link LINK --filter name .*mosaic.*`
+A questo punto utilizzando uno o più `-F`/`--filter` possiamo selezionare la stream che vogliamo scaricare. I filtri prendono due argomenti: il primo è la chiave su cui vogliamo filtrare (Continuare a leggere il readme per la lista delle chiavi), il secondo è una regex che verrà applicata sul valore di quella chiave. So che a molti la parola "regex" può far paura, ma se dovete semplicemente prendere una determinata stream potete banalmente scrivere il valore completo tra virgolette (Ad esempio: `"Luke4316"` ci matcherà la stringa esatta Luke4316). Un'altra regex che può essere utile è ottenere controllare se una stringa è contenuta nel valore della chiave è questa: `".*VALORE CONTENUTO NELLA STRINGA.*"`. Talvolta esiste una stream che combina già le varie riprese della stessa lezione in un unico file. Per ottenerla (Alla massima qualità) uso il seguente comando: `python3 unitelmaDownloader.py --username USERNAME --password PASSWORD --link LINK --filter name .*mosaic.* --filter qualityId "0" --modeAnd`
 
 Come scritto sopra, è possibile specificare più di un filtro. Di default, una stream per essere una scelta deve rispettare tutti i filtri. Se basta che un filtro sia valido per poter scegliere una stream, si può usare l'argomento `-o`/`--modeOr` (Opposto a `-a`/`--modeAnd`)
 
@@ -47,6 +47,7 @@ Se si vuole eseguire un comando una volta terminato i download (Ad esempio, speg
 | Chiave      | Descrizione                                                     |
 | ----------- | --------------------------------------------------------------- |
 | internalId  | Numero in ordine della stream                                   |
+| qualityId   | Id della qualità di un determinato video (0 = qualità più alta) |
 | width       | Larghezza del video                                             |
 | height      | Altezza del video                                               |
 | bitrate     | Bitrate del video                                               |

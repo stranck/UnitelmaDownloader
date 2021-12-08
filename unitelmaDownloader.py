@@ -48,6 +48,7 @@ Per ogni linea di --file oppure direttamente da linea di comando (Se si vuole sc
 
 Campi KEY possibili delle stream:
     internalId      : Numero in ordine della stream
+	qualityId       : Id della qualità di un determinato video (0 = qualità più alta)
     width           : Larghezza del video
     height          : Altezza del video
     bitrate         : Bitrate del video
@@ -86,6 +87,7 @@ def printStream(stream, videoLink):
 	dimensionStr = "Size: " + stream["sizeStr"]
 	qualityStr = f"Quality: {stream['width']}x{stream['height']} @ {stream['framerate']}fps"
 	bitrateStr = f"Bitrate: " + stream["bitrateStr"]
+	qualityIdStr = f"Quality ID {stream['qualityId']}"
 
 	tagsStr = stream["tagsStr"]
 
@@ -95,7 +97,7 @@ def printStream(stream, videoLink):
 	tagsStr			= tagsStr			 	if (len(tagsStr) < 150)					else tagsStr[:146] 					+ "..."
 
 	s  = "+--- Internal stream ID: " + (str(stream["internalId"]) + " ").ljust(4, "-") + "--- Video link: " + (videoLink + " ").ljust(114, "-") + "+\n"
-	s += "|  " + (durationStr.ljust(30) + dimensionStr.ljust(30) + qualityStr.ljust(30) + bitrateStr.ljust(30)).ljust(156) + 	"|\n"
+	s += "|  " + (durationStr.ljust(30) + dimensionStr.ljust(30) + qualityStr.ljust(30) + bitrateStr.ljust(30) + qualityIdStr.ljust(30)).ljust(156) + 	"|\n"
 	s += "|  " + ("Name: \"" 			+ nameStr + "\"")			.ljust(156) +												"|\n"
 	s += "|  " + ("Description: \"" 	+ descriptionStr + "\"")	.ljust(156) +												"|\n"
 	s += "|  " + ("Search text: \"" 	+ searchTxtStr + "\"")		.ljust(156) +												"|\n"
@@ -211,7 +213,6 @@ def login(session, usr, pw):
 
 		heahder = {
 			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
-			#"Origin": "https://idp.unitelma.it"
 		}
 		r = session.get("https://elearning.unitelma.it/", headers=heahder)
 		if(VERBOSE):
@@ -294,7 +295,6 @@ def getMainID(session, videoLink):
 	}
 	r = session.get(videoLink, headers=headers)
 	t = r.text
-	#print(t)
 	id = t.split('src="https://elearning.unitelma.it/mod/kalvidres/lti_launch.php?')[1].split("entryid%2F")[1].split("%")[0]
 	courseId = t.split("https://elearning.unitelma.it/course/view.php?id=")[1].split("\"")[0]
 	if(VERBOSE):
@@ -302,13 +302,13 @@ def getMainID(session, videoLink):
 	return id, courseId
 
 def getKs(session, videoLink, mainId, courseId):
-	#proxies = {"http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080"}
 	if(VERBOSE):
 		print("Obtaining kaf endpoint...", end=" ")
 	headers = {
 		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
 		"Referer": videoLink
 	}
+	#TODO find a clean version of this link
 	link = f'https://elearning.unitelma.it/mod/kalvidres/lti_launch.php?courseid={courseId}&height=602&width=658&withblocks=0&source=http%3A%2F%2Fkaltura-kaf-uri.com%2Fbrowseandembed%2Findex%2Fmedia%2Fentryid%2F{mainId}%2FshowDescription%2Ffalse%2FshowTitle%2Ftrue%2FshowTags%2Ffalse%2FshowDuration%2Ffalse%2FshowOwner%2Ftrue%2FshowUploadDate%2Ffalse%2FembedType%2FoldEmbed%2FplayerSize%2F602x658%2FplayerSkin%2F23448850%2FcrsId%2F1888%2FcmId%2F50969%2F'
 	r = session.get(link, headers=headers)
 	t = r.text
@@ -379,66 +379,71 @@ def getStreams(session, mainId, ksToken):
 		"3:ks": ksToken,
 		"3:service": "flavorAsset",
 		"3:action": "list",
-		"3:filter:entryIdEqual": "{1:result:objects:1:id}",
+		"3:filter:entryIdEqual": "{1:result:objects:1:id}", #Official requests
 		"4:ks": ksToken,
 		"4:service": "flavorAsset",
 		"4:action": "list",
-		"4:filter:entryIdEqual": "{1:result:objects:0:parentEntryId}"
+		"4:filter:entryIdEqual": "{1:result:objects:0:parentEntryId}" #get the flavor of the mainId
 	}
 	r = session.post("https://kmc.l2l.cineca.it/api_v3/index.php?service=multirequest", headers=headers, data=params)
 	j = r.json()
 	allMetaData = j[0]["objects"]
 	j = j[1:]
 	streams = []
-	i = 0
+	metaDataIdx = 0
+	internalId = 0
 	for stream in j:
-		highRes = stream["objects"][0]
-		tags = set()
+		qualityId = 0
+		for highRes in stream["objects"]:
+			tags = set()
 
-		obj = {
-			"internalId": i,
-			"width": highRes["width"],
-			"height": highRes["height"],
-			"bitrate": highRes["bitrate"],
-			"framerate": highRes["frameRate"],
-			"flavorId": highRes["id"],
-			"entryId": highRes["entryId"],
-			"size": highRes["size"],
+			obj = {
+				"internalId": internalId,
+				"qualityId" : qualityId,
+				"width": highRes["width"],
+				"height": highRes["height"],
+				"bitrate": highRes["bitrate"],
+				"framerate": highRes["frameRate"],
+				"entryId": highRes["entryId"],
+				"flavorId": highRes["id"],
+				"size": highRes["size"],
 
-			"duration": 0,
-			"name": "-",
-			"description": "-",
-			"searchText": "-",
+				"duration": 0,
+				"description": "-",
+				"searchText": "-",
+				"name": "-",
 
-			"durationStr": str(datetime.timedelta(seconds=0)),
-			"bitrateStr": f"{convert_size(highRes['bitrate'])}ps",
-			"sizeStr": convert_size(highRes["size"])
-		}
+				"durationStr": str(datetime.timedelta(seconds=0)),
+				"bitrateStr": f"{convert_size(highRes['bitrate'])}ps",
+				"sizeStr": convert_size(highRes["size"])
+			}
 
-		temp = highRes["tags"]
-		temp = temp.split(",")
-		for t in temp:
-			tags.add(t.strip())
-		
-		if(i < len(allMetaData)):
-			metaData = allMetaData[i]
-			obj["duration"] = metaData["duration"]
-			obj["name"] = metaData["name"]
-			obj["description"] = metaData["description"]
-			obj["searchText"] = metaData["searchText"]
-
-			obj["durationStr"] = str(datetime.timedelta(seconds=metaData["duration"]))
-
-			temp = metaData["tags"]
+			temp = highRes["tags"]
 			temp = temp.split(",")
 			for t in temp:
 				tags.add(t.strip())
+			
+			if(metaDataIdx < len(allMetaData)):
+				metaData = allMetaData[metaDataIdx]
+				obj["duration"] = metaData["duration"]
+				obj["name"] = metaData["name"]
+				obj["description"] = metaData["description"]
+				obj["searchText"] = metaData["searchText"]
 
-		obj["tags"] = tags
-		obj["tagsStr"] = ", ".join(tags)
+				obj["durationStr"] = str(datetime.timedelta(seconds=metaData["duration"]))
 
-		streams.append(obj)
-		i += 1
+				temp = metaData["tags"]
+				temp = temp.split(",")
+				for t in temp:
+					tags.add(t.strip())
+
+			obj["tags"] = tags
+			obj["tagsStr"] = ", ".join(tags)
+
+			streams.append(obj)
+			internalId += 1
+			qualityId += 1
+		metaDataIdx += 1
 	if(VERBOSE):
 		print("Done!")
 	return streams
