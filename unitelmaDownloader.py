@@ -34,7 +34,7 @@ Argomenti:
   * -u USERNAME,  --username USERNAME    : Username per loggarti dentro unitelma
   * -p PASSWORD,  --password PASSWORD    : Password per loggarti dentro unitelma
     -f FILE,      --file     FILE        : File da cui leggere, linea per linea, l'elenco di video da scaricare
-	-U USER_AGENT --userAgent USER_AGENT : UserAgent da usare nelle richieste. Default: casuale
+    -U USER_AGENT --userAgent USER_AGENT : UserAgent da usare nelle richieste. Default: casuale
     -c COMMAND    --command  COMMAND     : Comando da eseguire a fine download
     -v,           --verbose              : Imposta la modalità verbosa. Due livelli possibili
 Per ogni linea di --file oppure direttamente da linea di comando (Se si vuole scaricare un solo video) è possibile specificare questi argomenti:
