@@ -42,7 +42,7 @@ Per ogni linea di --file oppure direttamente da linea di comando (Se si vuole sc
   * -l LINK,      --link     LINK        : Link del video da scaricare
     -i,           --getInfo              : Ottiene le informazioni sulle stream del video al posto di scaricarlo
     -n FILENAME,  --fileName FILENAME    : Nome del file in output
-    -r,	          --redownload           : Riscarica un file, anche se già esiste
+    -r,           --redownload           : Riscarica un file, anche se già esiste
     -a,           --modeAnd              : I filtri per la scelta della stream da scaricare sono in AND (default)
     -o,           --modeOr               : I filtri per la scelta della stream da scaricare sono in OR
     -F KEY REGEX, --filter   KEY REGEX   : Specifica un filtro sul campo KEY delle stream, che deve matchare la REGEX
